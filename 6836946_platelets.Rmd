@@ -1,0 +1,128 @@
+# SIRE506 Problem Set
+
+------
+## About the data
+The dataset “platelet.csv” contains data from 211 individuals tested for platelet aggregation, and genotyped three genetic markers. 
+Work on the data in the enclosed folder PlateletHW.csv
+
+The variables contained in this dataset are:
+-	IID: Unique individual identification number
+-	rs4244285: CYP2C19*2 genotype coded as 0, 1, and 2 based on the number of mutation
+-	rs4244285: CYP2C19*3 genotype coded as 0 and 1 based on the number of mutation (there was no one with homozygous CYP2C19*3 mutation).
+-	rs662: PON1 genotype at the position 192Q>R, coded as 0, 1, and 2 based on the number of mutation (0 means QQ, 1 means QR, and 2 means RR genotype).
+-	ADP: the level of ADP induced platelet aggregation. The more platelet aggregation that can occur means that the patients did not response to the precribed anti-platelet drugs i.e. Clopidogrel in this study.
+-	Resistance: a binary variable, 1 representing the clopidogrel non-responders, and 0 representing clopidogrel responders.
+
+## Questions
+### 1. Import the data
+
+From plateletHW.csv, use e.g. readr::read_table() to import the data into a data frame called “clopidogrel”
+
+```{r}
+library(readr)
+clopidogrel <- readr::read_delim("PlateletHW.tsv", 
+    delim = "\t", escape_double = FALSE, 
+    trim_ws = TRUE)
+View(clopidogrel)
+```
+- Notice that I use `readr::read_delim` to clearly explain what library `read_delim` is loaded from. This makes the code easier to read and review in the future. 
+
+ 
+### 2.	Check for outliers and distribution.
+- How can you visualize the distribution of `ADP`?
+
+- Try histogram
+```{r}
+#download.packages(ggplot())
+library(ggplot2)
+
+# Histogram of ADP
+ggplot(clopidogrel, aes(x = ADP)) +
+  geom_histogram(binwidth = 8, fill = "lightblue", color = "black") +
+  labs(
+    title="Histogram of ADP Induced Platelet Aggregation",
+    x = "ADP level",
+    y = "Frequency"
+  )
+  
+```
+
+- Try ploting as box-plot 
+```{r}
+ggplot(clopidogrel, aes(y = ADP, fill = "lightpink")) +
+  geom_boxplot() +
+  labs(
+    title = "Boxplot of ADP Induced Platelet Aggregation",
+    y = "ADP level",
+  )
+```
+
+- What type of variable is `ADP`? Is it a continuous variable or a categorical variable?
+
+
+```{r}
+  ADP in this case is a Continuous variable because it can be measure over the range (eg. 9.5271459, 12.8094598, 33.6278596)
+
+```
+
+- Try `summary`
+```{r}
+summary(clopidogrel)
+# can you specifically summarize "ADP" alone?
+```
+
+- Are there any outliers or impossible values? What does a negative value of `ADP` mean?
+
+Ans: There are the impossible values presented as the negative values of ADP, ADP agg.level have to be >0
+
+- What does the mean of a binary variable `Resistance` tell us? 
+
+Ans: The mean of resistance (0.3318) means tell us the percentage of Clopidogrel non_responder (33.18%)
+
+
+- How would you describe the central tendency of this variable? i.e. will you use the mean and standard deviation or proportion of ADP induced platelet aggregation as a summary statistics to represent platelet aggregation level of these patients? 
+
+Ans: Because ADP is a continuous variable, it'll be nest to uses mean and sd.For the visualization of the distribution of data(Clopidogrel)
+
+
+You can also try the command
+
+```{r}
+
+```
+
+Write a sentence or two to describe the distribution of platelet aggregation in this dataset. 
+Ans: the distribution od ADP is rightly-skewed, and shows that most of the patient has ADP level in the lower end (responder) but somes has significantly higher levels(non-responder)
+
+
+
+### 3.	Comparison
+- What is the differences between mean platelet aggregation level between the two groups of individuals with CYPC19*3 mutation? Do individuals with CYP2C19*3 mutation (CYP3 coded as 1) have higher level of platelet aggregation than individuals without CYP2C19*3 mutation (CYP3 coded as 0)? Is the difference statistically significant (what is the p-value for association)?
+
+Ans:The difference in ADP is statistically significant between two groups with 95% confidence with p-value = 0.002 so we dont accept null hypothesis of no significant differences of ADP mean between both group.
+
+```{r}
+gtsummary::tbl_regression(glm(ADP ~ rs4986893 , data = clopidogrel))
+```
+#### Age and Sex adjusted?
+- Is age or sex a confounding factor?
+- How can we control the effect of age and sex in the model?
+
+Ans: We have to if age or sex are associated with both the exposure (rs4986893) and the outcome (ADP), if true then > confounding factor, we can control it by including them in the gtsummary 
+
+```{r}
+mean_adp_rs0 <- mean(clopidogrel$ADP[clopidogrel$rs4986893 == 0], na.rm = TRUE)
+
+print(mean_adp_rs0)
+
+mean_adp_rs1 <- mean(clopidogrel$ADP[clopidogrel$rs4986893 == 1], na.rm = TRUE)
+
+# Print the result
+print(mean_adp_rs1)
+```
+
+Example write-up
+
+The mean platelet aggregation in individuals with CYP2C19*3 mutation was _____65.22____, compared to ______39.12_______in individuals without CYP2C19*3 mutation.  The group with CYP2C19*3 mutation on average had [26] [higher] platelet aggregation level that the individuals without CYP2C19*3 mutation. The difference in platelet aggregation between genotype groups [was] statistically different (p = __0.002_).
+
+ 
